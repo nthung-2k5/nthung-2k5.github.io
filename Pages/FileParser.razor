@@ -3,16 +3,6 @@
 @inject NavigationManager NavMag
 @namespace OmoriDialogueParser
 
-<div class="nav"><span>Dialogue</span> | <a href="variables.html">Variables</a> | <a href="switches.html">Switches</a> | <a href="/file">Maps</a></div>
-
-<h2>OMORI Dialogue</h2>
-
-This page lists all of the spoken dialogue in OMORI, without battle text as of now.
-<span style="color: red">ATTENTION: SPOILERS AHEAD!!</span>
-<br />
-If you notice any mistakes, please open an issue <a href="https://github.com/goaaats/OmoriDialogue">on my GitHub repo.</a>
-<br />
-<br />
 <InputFile OnChange="@LoadFiles"/>
 <div id="textboxes">
     @if (fileMessages.Count() > 0)
@@ -31,7 +21,7 @@ If you notice any mistakes, please open an issue <a href="https://github.com/goa
     }
     else
     {
-        <span style="color: red">ATTENTION: SPOILERS AHEAD!!</span>
+        <div style="color: red">@errMessage</div>
     }
 </div>
 @code {

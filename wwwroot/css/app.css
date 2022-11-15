@@ -49,6 +49,14 @@ div.nav > span {
     color: gray;
 }
 
+a.nav-link.active {
+    color: gray;
+}
+
+a.nav-link {
+    color: darkblue;
+}
+
 div.nav {
     border-radius: 5px;
     display: inline;
