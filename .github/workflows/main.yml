@@ -20,5 +20,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           BRANCH: gh-pages
           FOLDER: release/wwwroot
+      - name: Change base-tag in index.html from / to BlazorGitHubPagesDemo
+        run: sed -i 's/<base href="\/" \/>/<base href="\/nthung-2k5.github.io\/" \/>/g' release/wwwroot/index.html
       - name: Add .nojekyll file
         run: touch release/wwwroot/.nojekyll
