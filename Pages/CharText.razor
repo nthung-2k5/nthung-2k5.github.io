@@ -1,0 +1,86 @@
+﻿@page "/"
+@page "/{currentChar}"
+@inject HttpClient Http
+@inject NavigationManager NavMag
+<div class="nav"><span>Dialogue</span> | <a href="variables.html">Variables</a> | <a href="switches.html">Switches</a> | <a href="/file">Maps</a></div>
+
+<h2>OMORI Dialogue</h2>
+
+This page lists all of the spoken dialogue in OMORI, without battle text as of now.
+<span style="color: red">ATTENTION: SPOILERS AHEAD!!</span>
+<br/>
+If you notice any mistakes, please open an issue <a href="https://github.com/goaaats/OmoriDialogue">on my GitHub repo.</a>
+<br/>
+<br/>
+<select id="characters" @bind="@CurrentChar">
+    <option value="">Select one...</option>
+    @foreach (var character in names!)
+    {
+        <option value="@character">@character</option>
+    }
+</select>
+
+<br/>
+<b><a href="/file">Sort by language file instead...</a></b>
+<br/>
+<br/>
+<div id="textboxes">
+    @if (currentChar != string.Empty)
+    {
+        foreach (var (file, messages) in charMessages)
+        {
+            <h2 class="heading">
+                <span class="fake-link" onclick="@(() => NavMag.NavigateTo($"/file/{file}"))">
+                    @file
+                </span>
+            </h2>
+            foreach (var message in messages)
+            {
+                <Dialogue Message="@message" FileName="@file" OnFocused="@((message) => OnDialogueFocused(((string, ExportMessage)) message))">
+                </Dialogue>
+            }
+                
+        }
+        
+    }
+</div>
+<noscript>
+    <p>Sorry, but you need to enable JavaScript to use this.</p>
+</noscript>
+<div>
+    <p>
+        <span class="credits">Credits:</span>
+        <br/>
+        <a href="http://www.omori-game.com/">OMORI and fonts (c) OMOCAT, 2020</a>
+        <br/>
+        Web page design based on <a href="https://hushbugger.github.io/dialogue">hushbugger.github.io</a>
+    </p>
+</div>
+@code {
+    private Dictionary<string, Dictionary<string, ExportMessage[]>> characters = new();
+    private string currentChar = string.Empty;
+    [Parameter]
+    public string CurrentChar
+    {
+        get => currentChar;
+        set
+        {
+
+            currentChar = value ?? string.Empty;
+            characters.TryGetValue(currentChar, out charMessages!);
+            charMessages ??= new();
+        }
+    }
+    private void OnDialogueFocused((string file, ExportMessage message) message)
+    {
+        charMessages = new() { { message.file, new ExportMessage[] { message.message } } };
+    }
+    public Dictionary<string, ExportMessage[]> charMessages = new();
+    public string[] names = new string[] { };
+    protected override async Task OnInitializedAsync()
+    {
+        characters = (await Http.GetFromJsonAsync<Dictionary<string, Dictionary<string, ExportMessage[]>>>("text/text_bychara.json"))!;
+        names = characters.Keys.ToArray();
+        CurrentChar = currentChar;
+    }
+}

@@ -1,0 +1,36 @@
+﻿<div name="container">
+    @if (Message.Speaker is not null)
+    {
+        <div class="speakerbox" name="name">
+            <a href=@((!Parsed) ? $"/{Message.Speaker}" : "/parser") class="speakerbox" name="link">
+                @Message.Speaker
+            </a>
+        </div>
+    }
+    <div class="faceandtext" name="textAndFace">
+        <div class="textbox" name="box">
+            <a @onclick="IsolateDialogue" @onclick:preventDefault="@(!Parsed)" class=@($"textbox{((Message.Html == string.Empty) ? " notext" : string.Empty)}")>
+                @((MarkupString)msgText)
+            </a>
+        </div>
+        @if (Message.FaceSet != null && Message.FaceSet != string.Empty)
+        {
+            (int fRow, int fCol) = Math.DivRem(Message.FaceIndex ?? 0, 4);
+            <div class="facebox" style=@($"background-image: url('faces/{Message.FaceSet}.png'); background-position: -{fCol * 106}px -{fRow * 106}px;")>
+            </div>
+        }
+    </div>
+
+</div>
+@code {
+    [Parameter]
+    public bool Parsed { get; set; } = false;
+    [Parameter]
+    public ExportMessage Message { get; set; }
+    [Parameter]
+    public string FileName { get; set; } = string.Empty;
+    [Parameter]
+    public EventCallback OnFocused { get; set; }
+    protected async Task IsolateDialogue() => await OnFocused.InvokeAsync((FileName, Message));
+    string msgText => (Message.Html != string.Empty) ? Message.Html : "Message has no text...";
+}

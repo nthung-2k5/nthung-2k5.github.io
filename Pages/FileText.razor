@@ -1,0 +1,78 @@
+﻿@page "/file"
+@page "/file/{currentFile}"
+@inject HttpClient Http
+@namespace OmoriDialogueParser.Model
+<div class="nav"><span>Dialogue</span> | <a href="variables.html">Variables</a> | <a href="switches.html">Switches</a> | <a href="maps.html">Maps</a></div>
+
+<h2>OMORI Dialogue</h2>
+
+This page lists all of the spoken dialogue in OMORI, without battle text as of now.
+<span style="color: red">ATTENTION: SPOILERS AHEAD!!</span>
+<br />
+If you notice any mistakes, please open an issue <a href="https://github.com/goaaats/OmoriDialogue">on my GitHub repo.</a>
+<br />
+<br />
+<select id="files" @bind="@CurrentFile">
+    <option value="">Select one...</option>
+    @foreach (var file in fileNames!)
+    {
+        <option value="@file">@file</option>
+    }
+</select>
+
+<br />
+<b><a href="/">Sort by character instead...</a></b>
+<br />
+<br />
+<div id="textboxes">
+    @if (currentFile != string.Empty)
+    {
+        foreach (var message in fileMessages)
+        {
+            <Dialogue Message="@message" FileName="" OnFocused="@((message) => OnDialogueFocused(((string, ExportMessage)) message))">
+            </Dialogue>
+
+        }
+
+    }
+</div>
+<noscript>
+    <p>Sorry, but you need to enable JavaScript to use this.</p>
+</noscript>
+<div>
+    <p>
+        <span class="credits">Credits:</span>
+        <br />
+        <a href="http://www.omori-game.com/">OMORI and fonts (c) OMOCAT, 2020</a>
+        <br />
+        Web page design based on <a href="https://hushbugger.github.io/dialogue">hushbugger.github.io</a>
+    </p>
+</div>
+@code {
+    private Dictionary<string, ExportMessage[]> files = new();
+    private string currentFile = string.Empty;
+    [Parameter]
+    public string CurrentFile
+    {
+        get => currentFile;
+        set
+        {
+
+            currentFile = value ?? string.Empty;
+            files.TryGetValue(currentFile, out fileMessages!);
+            fileMessages ??= new ExportMessage[] { };
+        }
+    }
+    private void OnDialogueFocused((string file, ExportMessage message) message)
+    {
+        fileMessages = new ExportMessage[] { message.message };
+    }
+    public ExportMessage[] fileMessages = new ExportMessage[] { };
+    public string[] fileNames = new string[] { };
+    protected override async Task OnInitializedAsync()
+    {
+        files = (await Http.GetFromJsonAsync<Dictionary<string, ExportMessage[]>>("text/text.json"))!;
+        fileNames = files.Keys.ToArray();
+        CurrentFile = currentFile;
+    }
+}

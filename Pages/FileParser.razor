@@ -1,0 +1,74 @@
+﻿@page "/parser"
+@inject HttpClient Http
+@inject NavigationManager NavMag
+@namespace OmoriDialogueParser
+
+<div class="nav"><span>Dialogue</span> | <a href="variables.html">Variables</a> | <a href="switches.html">Switches</a> | <a href="/file">Maps</a></div>
+
+<h2>OMORI Dialogue</h2>
+
+This page lists all of the spoken dialogue in OMORI, without battle text as of now.
+<span style="color: red">ATTENTION: SPOILERS AHEAD!!</span>
+<br />
+If you notice any mistakes, please open an issue <a href="https://github.com/goaaats/OmoriDialogue">on my GitHub repo.</a>
+<br />
+<br />
+<InputFile OnChange="@LoadFiles"/>
+<div id="textboxes">
+    @if (fileMessages.Count() > 0)
+    {
+        <h2 class="heading">
+            <span class="fake-link">
+                @fileName
+            </span>
+        </h2>
+        foreach (var message in fileMessages)
+        {
+            <Dialogue Message="@message" Parsed=true>
+            </Dialogue>
+        }
+
+    }
+    else
+    {
+        <span style="color: red">ATTENTION: SPOILERS AHEAD!!</span>
+    }
+</div>
+@code {
+    private string fileName = string.Empty;
+    private ExportMessage[] fileMessages = new ExportMessage[] { };
+    private string errMessage = string.Empty;
+    private async Task LoadFiles(InputFileChangeEventArgs e)
+    {
+        using Stream yamlStream = e.File.OpenReadStream(maxAllowedSize: long.MaxValue);
+        errMessage = string.Empty;
+        string yamlFile = await new StreamReader(yamlStream).ReadToEndAsync();
+        fileName = e.File.Name;
+        var system = (await Http.GetFromJsonAsync<Model.SystemData>("text/System.json"))!;
+        try
+        {
+            var languageFile = YamlInterpreter.Parse(new StringReader(yamlFile), system);
+
+            if (languageFile == null)
+            {
+                Console.WriteLine($"   -> {e.File.Name} was empty!");
+            }
+            else
+            {
+                fileMessages = languageFile.Messages.Select(languageFileMessage => new ExportMessage
+                {
+                    Html = languageFileMessage.Value.Text.ToHtml(),
+                    Speaker = languageFileMessage.Value.Text.GetSpeaker(),
+                    Background = languageFileMessage.Value.Background,
+                    FaceIndex = languageFileMessage.Value.Faceindex,
+                    FaceSet = languageFileMessage.Value.Faceset
+                }).ToArray();
+            }
+
+        }
+        catch (Exception ex)
+        {
+            errMessage = ex.Message;
+        }
+	}
+}
